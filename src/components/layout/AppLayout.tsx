@@ -1,33 +1,37 @@
 import { NavLink, Outlet } from 'react-router-dom';
 import { 
   LayoutDashboard, Package, Building2, ShoppingCart, 
-  ChefHat, Truck, CreditCard, Warehouse, Settings, Cookie, Tag
+  ChefHat, Truck, CreditCard, Warehouse, Settings, Cookie, Tag, Globe
 } from 'lucide-react';
-
-const navItems = [
-  { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
-  { to: '/products', icon: Package, label: 'Products' },
-  { to: '/clients', icon: Building2, label: 'Clients' },
-  { to: '/client-pricing', icon: Tag, label: 'Client Pricing' },
-  { to: '/orders', icon: ShoppingCart, label: 'Orders' },
-  { to: '/kitchen', icon: ChefHat, label: 'Kitchen Board' },
-  { to: '/delivery', icon: Truck, label: 'Delivery' },
-  { to: '/finance', icon: CreditCard, label: 'Finance' },
-  { to: '/inventory', icon: Warehouse, label: 'Inventory' },
-];
+import { useLanguage } from '@/i18n/LanguageContext';
+import { Button } from '@/components/ui/button';
 
 const AppLayout = () => {
+  const { t, lang, setLanguage, isRTL } = useLanguage();
+
+  const navItems = [
+    { to: '/', icon: LayoutDashboard, label: t.nav.dashboard },
+    { to: '/products', icon: Package, label: t.nav.products },
+    { to: '/clients', icon: Building2, label: t.nav.clients },
+    { to: '/client-pricing', icon: Tag, label: t.nav.clientPricing },
+    { to: '/orders', icon: ShoppingCart, label: t.nav.orders },
+    { to: '/kitchen', icon: ChefHat, label: t.nav.kitchen },
+    { to: '/delivery', icon: Truck, label: t.nav.delivery },
+    { to: '/finance', icon: CreditCard, label: t.nav.finance },
+    { to: '/inventory', icon: Warehouse, label: t.nav.inventory },
+  ];
+
   return (
     <div className="flex h-screen overflow-hidden">
       {/* Sidebar */}
-      <aside className="w-64 flex-shrink-0 bg-sidebar flex flex-col border-r border-sidebar-border">
+      <aside className={`w-64 flex-shrink-0 bg-sidebar flex flex-col ${isRTL ? 'border-l' : 'border-r'} border-sidebar-border`}>
         <div className="p-5 flex items-center gap-3 border-b border-sidebar-border">
           <div className="w-9 h-9 rounded-lg bg-sidebar-primary flex items-center justify-center">
             <Cookie className="w-5 h-5 text-sidebar-primary-foreground" />
           </div>
           <div>
-            <h1 className="text-sm font-bold text-sidebar-accent-foreground tracking-tight">SweetOps</h1>
-            <p className="text-[10px] text-sidebar-foreground">Distribution & Operations</p>
+            <h1 className="text-sm font-bold text-sidebar-accent-foreground tracking-tight">{t.appName}</h1>
+            <p className="text-[10px] text-sidebar-foreground">{t.appSubtitle}</p>
           </div>
         </div>
 
@@ -51,10 +55,18 @@ const AppLayout = () => {
           ))}
         </nav>
 
-        <div className="p-3 border-t border-sidebar-border">
+        <div className="p-3 border-t border-sidebar-border space-y-1">
+          {/* Language Switcher */}
+          <button 
+            onClick={() => setLanguage(lang === 'ar' ? 'en' : 'ar')}
+            className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground w-full transition-colors"
+          >
+            <Globe className="w-4 h-4" />
+            {lang === 'ar' ? 'English' : 'العربية'}
+          </button>
           <button className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground w-full transition-colors">
             <Settings className="w-4 h-4" />
-            Settings
+            {t.settings}
           </button>
         </div>
       </aside>

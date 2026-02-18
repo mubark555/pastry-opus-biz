@@ -10,16 +10,19 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { clients as initialClients } from '@/data/mockData';
-import type { Client, PaymentTerms, AccountStatus } from '@/types';
-
-const getCreditStatus = (client: Client) => {
-  const ratio = client.outstandingBalance / client.creditLimit;
-  if (ratio >= 1) return { label: 'Over Limit', className: 'bg-status-danger text-status-danger-foreground' };
-  if (ratio >= 0.8) return { label: 'Near Limit', className: 'bg-status-warning text-status-warning-foreground' };
-  return { label: 'Safe', className: 'bg-status-safe text-status-safe-foreground' };
-};
+import { useLanguage } from '@/i18n/LanguageContext';
+import type { Client, PaymentTerms } from '@/types';
 
 const Clients = () => {
+  const { t } = useLanguage();
+
+  const getCreditStatus = (client: Client) => {
+    const ratio = client.outstandingBalance / client.creditLimit;
+    if (ratio >= 1) return { label: t.clients.overLimit, className: 'bg-status-danger text-status-danger-foreground' };
+    if (ratio >= 0.8) return { label: t.clients.nearLimit, className: 'bg-status-warning text-status-warning-foreground' };
+    return { label: t.clients.safe, className: 'bg-status-safe text-status-safe-foreground' };
+  };
+
   const [clientList, setClientList] = useState<Client[]>(initialClients);
   const [search, setSearch] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -37,34 +40,34 @@ const Clients = () => {
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Clients</h1>
-          <p className="text-sm text-muted-foreground">Manage B2B client accounts</p>
+          <h1 className="text-2xl font-bold text-foreground">{t.clients.title}</h1>
+          <p className="text-sm text-muted-foreground">{t.clients.subtitle}</p>
         </div>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger asChild><Button className="gap-2"><Plus className="w-4 h-4" /> Add Client</Button></DialogTrigger>
+          <DialogTrigger asChild><Button className="gap-2"><Plus className="w-4 h-4" /> {t.clients.addClient}</Button></DialogTrigger>
           <DialogContent className="max-w-lg">
-            <DialogHeader><DialogTitle>Add New Client</DialogTitle></DialogHeader>
+            <DialogHeader><DialogTitle>{t.clients.addNewClient}</DialogTitle></DialogHeader>
             <div className="grid grid-cols-2 gap-4">
-              <div className="col-span-2"><Label>Company Name</Label><Input value={newClient.companyName} onChange={e => setNewClient({ ...newClient, companyName: e.target.value })} /></div>
-              <div><Label>CR Number</Label><Input value={newClient.commercialRegNumber} onChange={e => setNewClient({ ...newClient, commercialRegNumber: e.target.value })} /></div>
-              <div><Label>Contact Person</Label><Input value={newClient.contactPerson} onChange={e => setNewClient({ ...newClient, contactPerson: e.target.value })} /></div>
-              <div><Label>Phone</Label><Input value={newClient.phone} onChange={e => setNewClient({ ...newClient, phone: e.target.value })} /></div>
-              <div><Label>Email</Label><Input value={newClient.email} onChange={e => setNewClient({ ...newClient, email: e.target.value })} /></div>
-              <div><Label>Credit Limit (SAR)</Label><Input type="number" value={newClient.creditLimit} onChange={e => setNewClient({ ...newClient, creditLimit: +e.target.value })} /></div>
+              <div className="col-span-2"><Label>{t.clients.companyName}</Label><Input value={newClient.companyName} onChange={e => setNewClient({ ...newClient, companyName: e.target.value })} /></div>
+              <div><Label>{t.clients.crNumber}</Label><Input value={newClient.commercialRegNumber} onChange={e => setNewClient({ ...newClient, commercialRegNumber: e.target.value })} /></div>
+              <div><Label>{t.clients.contactPerson}</Label><Input value={newClient.contactPerson} onChange={e => setNewClient({ ...newClient, contactPerson: e.target.value })} /></div>
+              <div><Label>{t.clients.phone}</Label><Input value={newClient.phone} onChange={e => setNewClient({ ...newClient, phone: e.target.value })} /></div>
+              <div><Label>{t.clients.email}</Label><Input value={newClient.email} onChange={e => setNewClient({ ...newClient, email: e.target.value })} /></div>
+              <div><Label>{t.clients.creditLimit} ({t.currency})</Label><Input type="number" value={newClient.creditLimit} onChange={e => setNewClient({ ...newClient, creditLimit: +e.target.value })} /></div>
               <div>
-                <Label>Payment Terms</Label>
+                <Label>{t.clients.paymentTerms}</Label>
                 <Select value={String(newClient.paymentTerms)} onValueChange={v => setNewClient({ ...newClient, paymentTerms: +v as PaymentTerms })}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="7">7 Days</SelectItem>
-                    <SelectItem value="14">14 Days</SelectItem>
-                    <SelectItem value="30">30 Days</SelectItem>
+                    <SelectItem value="7">7 {t.days}</SelectItem>
+                    <SelectItem value="14">14 {t.days}</SelectItem>
+                    <SelectItem value="30">30 {t.days}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
-              <div className="col-span-2"><Label>Notes</Label><Textarea value={newClient.notes} onChange={e => setNewClient({ ...newClient, notes: e.target.value })} /></div>
+              <div className="col-span-2"><Label>{t.notes}</Label><Textarea value={newClient.notes} onChange={e => setNewClient({ ...newClient, notes: e.target.value })} /></div>
             </div>
-            <div className="flex justify-end mt-4"><Button onClick={handleAdd} disabled={!newClient.companyName}>Add Client</Button></div>
+            <div className="flex justify-end mt-4"><Button onClick={handleAdd} disabled={!newClient.companyName}>{t.clients.addClient}</Button></div>
           </DialogContent>
         </Dialog>
       </div>
@@ -72,22 +75,22 @@ const Clients = () => {
       <Card className="border-0 shadow-sm">
         <CardHeader className="pb-3">
           <div className="relative max-w-sm">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search clients..." className="pl-9" />
+            <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input value={search} onChange={e => setSearch(e.target.value)} placeholder={t.clients.searchClients} className="ps-9" />
           </div>
         </CardHeader>
         <CardContent className="p-0">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Company</TableHead>
-                <TableHead>Contact</TableHead>
-                <TableHead>Phone</TableHead>
-                <TableHead className="text-right">Credit Limit</TableHead>
-                <TableHead className="text-right">Outstanding</TableHead>
-                <TableHead className="text-center">Terms</TableHead>
-                <TableHead className="text-center">Credit Status</TableHead>
-                <TableHead className="text-center">Account</TableHead>
+                <TableHead>{t.clients.company}</TableHead>
+                <TableHead>{t.clients.contact}</TableHead>
+                <TableHead>{t.clients.phone}</TableHead>
+                <TableHead className="text-end">{t.clients.creditLimit}</TableHead>
+                <TableHead className="text-end">{t.clients.outstanding}</TableHead>
+                <TableHead className="text-center">{t.clients.terms}</TableHead>
+                <TableHead className="text-center">{t.clients.creditStatus}</TableHead>
+                <TableHead className="text-center">{t.clients.account}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -98,15 +101,15 @@ const Clients = () => {
                     <TableCell className="font-medium">{client.companyName}</TableCell>
                     <TableCell>{client.contactPerson}</TableCell>
                     <TableCell className="text-sm">{client.phone}</TableCell>
-                    <TableCell className="text-right">SAR {client.creditLimit.toLocaleString()}</TableCell>
-                    <TableCell className="text-right font-medium">SAR {client.outstandingBalance.toLocaleString()}</TableCell>
-                    <TableCell className="text-center">{client.paymentTerms}d</TableCell>
+                    <TableCell className="text-end">{t.currency} {client.creditLimit.toLocaleString()}</TableCell>
+                    <TableCell className="text-end font-medium">{t.currency} {client.outstandingBalance.toLocaleString()}</TableCell>
+                    <TableCell className="text-center">{client.paymentTerms} {t.days}</TableCell>
                     <TableCell className="text-center">
                       <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold ${creditStatus.className}`}>{creditStatus.label}</span>
                     </TableCell>
                     <TableCell className="text-center">
                       <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold ${client.accountStatus === 'active' ? 'bg-status-safe text-status-safe-foreground' : 'bg-status-danger text-status-danger-foreground'}`}>
-                        {client.accountStatus === 'active' ? 'Active' : 'Suspended'}
+                        {client.accountStatus === 'active' ? t.active : t.suspended}
                       </span>
                     </TableCell>
                   </motion.tr>
