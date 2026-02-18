@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Plus, Search, Filter } from 'lucide-react';
+import { Plus, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
@@ -9,7 +9,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { orders as initialOrders, clients, products, clientPricing, orderStatusLabels, orderStatusColors } from '@/data/mockData';
+import { orders as initialOrders, clients, products, clientPricing, orderStatusColors } from '@/data/mockData';
+import { useLanguage } from '@/i18n/LanguageContext';
 import type { Order, OrderStatus, OrderItem, DeliveryType } from '@/types';
 
 const getClientPrice = (clientId: string, productId: string, quantity: number): number => {
@@ -29,6 +30,7 @@ const getClientPrice = (clientId: string, productId: string, quantity: number): 
 const statusOrder: OrderStatus[] = ['new', 'approved', 'in_production', 'packaging', 'ready', 'out_for_delivery', 'delivered', 'cancelled'];
 
 const Orders = () => {
+  const { t } = useLanguage();
   const [orderList, setOrderList] = useState<Order[]>(initialOrders);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -61,14 +63,11 @@ const Orders = () => {
       return { productId: oi.productId, productName: product.name, quantity: oi.quantity, unitPrice, total: unitPrice * oi.quantity };
     });
     const totalAmount = items.reduce((s, i) => s + i.total, 0);
-    
-    // Credit check
     const remainingCredit = client.creditLimit - client.outstandingBalance;
     if (totalAmount > remainingCredit) {
-      alert(`Credit limit exceeded! Remaining credit: SAR ${remainingCredit.toLocaleString()}`);
+      alert(`${t.orders.creditLimitExceeded}: ${t.currency} ${remainingCredit.toLocaleString()}`);
       return;
     }
-
     const order: Order = {
       id: `o${Date.now()}`, orderNumber: `ORD-${Date.now()}`, clientId: selectedClient, clientName: client.companyName,
       items, deliveryType, requestedDate: new Date().toISOString().split('T')[0], requestedTime: '10:00',
@@ -87,7 +86,7 @@ const Orders = () => {
 
   const getNextStatus = (status: OrderStatus): OrderStatus | null => {
     const idx = statusOrder.indexOf(status);
-    if (idx < 0 || idx >= statusOrder.length - 2) return null; // skip cancelled
+    if (idx < 0 || idx >= statusOrder.length - 2) return null;
     return statusOrder[idx + 1];
   };
 
@@ -95,43 +94,42 @@ const Orders = () => {
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Orders</h1>
-          <p className="text-sm text-muted-foreground">{orderList.length} total orders</p>
+          <h1 className="text-2xl font-bold text-foreground">{t.orders.title}</h1>
+          <p className="text-sm text-muted-foreground">{orderList.length} {t.orders.totalOrders}</p>
         </div>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger asChild><Button className="gap-2"><Plus className="w-4 h-4" /> New Order</Button></DialogTrigger>
+          <DialogTrigger asChild><Button className="gap-2"><Plus className="w-4 h-4" /> {t.orders.newOrder}</Button></DialogTrigger>
           <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
-            <DialogHeader><DialogTitle>Create New Order</DialogTitle></DialogHeader>
+            <DialogHeader><DialogTitle>{t.orders.createNewOrder}</DialogTitle></DialogHeader>
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label>Client</Label>
+                  <Label>{t.orders.client}</Label>
                   <Select value={selectedClient} onValueChange={setSelectedClient}>
-                    <SelectTrigger><SelectValue placeholder="Select client" /></SelectTrigger>
+                    <SelectTrigger><SelectValue placeholder={t.orders.selectClient} /></SelectTrigger>
                     <SelectContent>{clients.filter(c => c.accountStatus === 'active').map(c => <SelectItem key={c.id} value={c.id}>{c.companyName}</SelectItem>)}</SelectContent>
                   </Select>
                   {selectedClient && (() => {
                     const cl = clients.find(c => c.id === selectedClient)!;
                     const remaining = cl.creditLimit - cl.outstandingBalance;
-                    return <p className="text-xs text-muted-foreground mt-1">Credit remaining: SAR {remaining.toLocaleString()}</p>;
+                    return <p className="text-xs text-muted-foreground mt-1">{t.orders.creditRemaining}: {t.currency} {remaining.toLocaleString()}</p>;
                   })()}
                 </div>
                 <div>
-                  <Label>Delivery Type</Label>
+                  <Label>{t.orders.deliveryType}</Label>
                   <Select value={deliveryType} onValueChange={v => setDeliveryType(v as DeliveryType)}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="delivery">Delivery</SelectItem>
-                      <SelectItem value="pickup">Pickup</SelectItem>
+                      <SelectItem value="delivery">{t.orders.delivery}</SelectItem>
+                      <SelectItem value="pickup">{t.orders.pickup}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
               </div>
-
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <Label>Order Items</Label>
-                  <Button variant="outline" size="sm" onClick={addOrderItem}>Add Item</Button>
+                  <Label>{t.orders.orderItems}</Label>
+                  <Button variant="outline" size="sm" onClick={addOrderItem}>{t.orders.addItem}</Button>
                 </div>
                 {orderItems.map((item, idx) => {
                   const unitPrice = selectedClient ? getClientPrice(selectedClient, item.productId, item.quantity) : 0;
@@ -143,16 +141,15 @@ const Orders = () => {
                           <SelectContent>{products.filter(p => p.isActive).map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}</SelectContent>
                         </Select>
                       </div>
-                      <Input type="number" min={1} value={item.quantity} onChange={e => updateOrderItem(idx, 'quantity', +e.target.value)} placeholder="Qty" />
-                      <p className="text-sm text-muted-foreground pb-2">SAR {(unitPrice * item.quantity).toLocaleString()}</p>
+                      <Input type="number" min={1} value={item.quantity} onChange={e => updateOrderItem(idx, 'quantity', +e.target.value)} />
+                      <p className="text-sm text-muted-foreground pb-2">{t.currency} {(unitPrice * item.quantity).toLocaleString()}</p>
                     </div>
                   );
                 })}
               </div>
-
-              <div><Label>Notes</Label><Textarea value={notes} onChange={e => setNotes(e.target.value)} /></div>
+              <div><Label>{t.notes}</Label><Textarea value={notes} onChange={e => setNotes(e.target.value)} /></div>
             </div>
-            <div className="flex justify-end mt-4"><Button onClick={handleCreateOrder} disabled={!selectedClient || orderItems.length === 0}>Create Order</Button></div>
+            <div className="flex justify-end mt-4"><Button onClick={handleCreateOrder} disabled={!selectedClient || orderItems.length === 0}>{t.orders.createOrder}</Button></div>
           </DialogContent>
         </Dialog>
       </div>
@@ -161,14 +158,14 @@ const Orders = () => {
         <CardHeader className="pb-3">
           <div className="flex items-center gap-3">
             <div className="relative flex-1 max-w-sm">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search orders..." className="pl-9" />
+              <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input value={search} onChange={e => setSearch(e.target.value)} placeholder={t.orders.searchOrders} className="ps-9" />
             </div>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger className="w-44"><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Statuses</SelectItem>
-                {statusOrder.map(s => <SelectItem key={s} value={s}>{orderStatusLabels[s]}</SelectItem>)}
+                <SelectItem value="all">{t.orders.allStatuses}</SelectItem>
+                {statusOrder.map(s => <SelectItem key={s} value={s}>{t.orderStatus[s as keyof typeof t.orderStatus]}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
@@ -177,14 +174,14 @@ const Orders = () => {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Order #</TableHead>
-                <TableHead>Client</TableHead>
-                <TableHead>Items</TableHead>
-                <TableHead className="text-center">Type</TableHead>
-                <TableHead>Date / Time</TableHead>
-                <TableHead className="text-right">Total</TableHead>
-                <TableHead className="text-center">Status</TableHead>
-                <TableHead className="text-center">Action</TableHead>
+                <TableHead>{t.orders.orderNumber}</TableHead>
+                <TableHead>{t.orders.client}</TableHead>
+                <TableHead>{t.items}</TableHead>
+                <TableHead className="text-center">{t.orders.type}</TableHead>
+                <TableHead>{t.orders.dateTime}</TableHead>
+                <TableHead className="text-end">{t.orders.total}</TableHead>
+                <TableHead className="text-center">{t.orders.status}</TableHead>
+                <TableHead className="text-center">{t.orders.action}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -194,15 +191,15 @@ const Orders = () => {
                   <motion.tr key={order.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.03 }} className="border-b border-border">
                     <TableCell className="font-medium text-sm">{order.orderNumber}</TableCell>
                     <TableCell>{order.clientName}</TableCell>
-                    <TableCell className="text-sm text-muted-foreground">{order.items.length} item(s)</TableCell>
-                    <TableCell className="text-center capitalize text-sm">{order.deliveryType}</TableCell>
+                    <TableCell className="text-sm text-muted-foreground">{order.items.length} {t.items}</TableCell>
+                    <TableCell className="text-center text-sm">{order.deliveryType === 'delivery' ? t.orders.delivery : t.orders.pickup}</TableCell>
                     <TableCell className="text-sm">{order.requestedDate} {order.requestedTime}</TableCell>
-                    <TableCell className="text-right font-medium">SAR {order.totalAmount.toLocaleString()}</TableCell>
+                    <TableCell className="text-end font-medium">{t.currency} {order.totalAmount.toLocaleString()}</TableCell>
                     <TableCell className="text-center">
-                      <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-medium ${orderStatusColors[order.status]}`}>{orderStatusLabels[order.status]}</span>
+                      <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-medium ${orderStatusColors[order.status]}`}>{t.orderStatus[order.status as keyof typeof t.orderStatus]}</span>
                     </TableCell>
                     <TableCell className="text-center">
-                      {next && <Button variant="outline" size="sm" className="text-xs h-7" onClick={() => updateStatus(order.id, next)}>{orderStatusLabels[next]}</Button>}
+                      {next && <Button variant="outline" size="sm" className="text-xs h-7" onClick={() => updateStatus(order.id, next)}>{t.orderStatus[next as keyof typeof t.orderStatus]}</Button>}
                     </TableCell>
                   </motion.tr>
                 );

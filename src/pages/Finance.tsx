@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { CreditCard, DollarSign, AlertTriangle } from 'lucide-react';
+import { CreditCard, DollarSign } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,16 +10,19 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { clients as initialClients, payments as initialPayments } from '@/data/mockData';
+import { useLanguage } from '@/i18n/LanguageContext';
 import type { Client, Payment, PaymentMethod } from '@/types';
 
-const getCreditStatus = (client: Client) => {
-  const ratio = client.outstandingBalance / client.creditLimit;
-  if (ratio >= 1) return { label: 'Over Limit', color: 'border-status-danger', bg: 'bg-red-50', text: 'text-status-danger' };
-  if (ratio >= 0.8) return { label: 'Near Limit', color: 'border-status-warning', bg: 'bg-amber-50', text: 'text-status-warning' };
-  return { label: 'Safe', color: 'border-status-safe', bg: 'bg-emerald-50', text: 'text-status-safe' };
-};
-
 const Finance = () => {
+  const { t } = useLanguage();
+
+  const getCreditStatus = (client: Client) => {
+    const ratio = client.outstandingBalance / client.creditLimit;
+    if (ratio >= 1) return { label: t.clients.overLimit, color: 'border-status-danger', bg: 'bg-red-50', text: 'text-status-danger' };
+    if (ratio >= 0.8) return { label: t.clients.nearLimit, color: 'border-status-warning', bg: 'bg-amber-50', text: 'text-status-warning' };
+    return { label: t.clients.safe, color: 'border-status-safe', bg: 'bg-emerald-50', text: 'text-status-safe' };
+  };
+
   const [clientList, setClientList] = useState<Client[]>(initialClients);
   const [paymentList, setPaymentList] = useState<Payment[]>(initialPayments);
   const [paymentDialog, setPaymentDialog] = useState<string | null>(null);
@@ -42,33 +45,16 @@ const Finance = () => {
   return (
     <div className="p-6 space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-foreground flex items-center gap-2"><CreditCard className="w-6 h-6" /> Finance & Credit Control</h1>
-        <p className="text-sm text-muted-foreground">Client credit management and payment tracking</p>
+        <h1 className="text-2xl font-bold text-foreground flex items-center gap-2"><CreditCard className="w-6 h-6" /> {t.finance.title}</h1>
+        <p className="text-sm text-muted-foreground">{t.finance.subtitle}</p>
       </div>
 
-      {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="border-0 shadow-sm">
-          <CardContent className="p-4">
-            <p className="text-xs text-muted-foreground">Total Outstanding</p>
-            <p className="text-2xl font-bold text-foreground">SAR {totalOutstanding.toLocaleString()}</p>
-          </CardContent>
-        </Card>
-        <Card className="border-0 shadow-sm">
-          <CardContent className="p-4">
-            <p className="text-xs text-muted-foreground">Total Credit Limit</p>
-            <p className="text-2xl font-bold text-foreground">SAR {totalCreditLimit.toLocaleString()}</p>
-          </CardContent>
-        </Card>
-        <Card className="border-0 shadow-sm">
-          <CardContent className="p-4">
-            <p className="text-xs text-muted-foreground">Over-Limit Clients</p>
-            <p className="text-2xl font-bold text-status-danger">{overdueClients.length}</p>
-          </CardContent>
-        </Card>
+        <Card className="border-0 shadow-sm"><CardContent className="p-4"><p className="text-xs text-muted-foreground">{t.finance.totalOutstanding}</p><p className="text-2xl font-bold text-foreground">{t.currency} {totalOutstanding.toLocaleString()}</p></CardContent></Card>
+        <Card className="border-0 shadow-sm"><CardContent className="p-4"><p className="text-xs text-muted-foreground">{t.finance.totalCreditLimit}</p><p className="text-2xl font-bold text-foreground">{t.currency} {totalCreditLimit.toLocaleString()}</p></CardContent></Card>
+        <Card className="border-0 shadow-sm"><CardContent className="p-4"><p className="text-xs text-muted-foreground">{t.finance.overLimitClients}</p><p className="text-2xl font-bold text-status-danger">{overdueClients.length}</p></CardContent></Card>
       </div>
 
-      {/* Client Credit Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {clientList.map((client, i) => {
           const status = getCreditStatus(client);
@@ -76,24 +62,23 @@ const Finance = () => {
           const usagePercent = Math.min(100, (client.outstandingBalance / client.creditLimit) * 100);
           return (
             <motion.div key={client.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
-              <Card className={`border-l-4 ${status.color} shadow-sm`}>
+              <Card className={`border-s-4 ${status.color} shadow-sm`}>
                 <CardContent className="p-4 space-y-3">
                   <div className="flex items-center justify-between">
                     <h3 className="font-semibold text-sm text-foreground">{client.companyName}</h3>
                     <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${status.bg} ${status.text}`}>{status.label}</span>
                   </div>
                   <div className="grid grid-cols-2 gap-2 text-xs">
-                    <div><span className="text-muted-foreground">Outstanding</span><p className="font-semibold text-foreground">SAR {client.outstandingBalance.toLocaleString()}</p></div>
-                    <div><span className="text-muted-foreground">Credit Limit</span><p className="font-semibold text-foreground">SAR {client.creditLimit.toLocaleString()}</p></div>
-                    <div><span className="text-muted-foreground">Remaining</span><p className={`font-semibold ${remaining < 0 ? 'text-status-danger' : 'text-status-safe'}`}>SAR {remaining.toLocaleString()}</p></div>
-                    <div><span className="text-muted-foreground">Terms</span><p className="font-semibold text-foreground">{client.paymentTerms} days</p></div>
+                    <div><span className="text-muted-foreground">{t.clients.outstanding}</span><p className="font-semibold text-foreground">{t.currency} {client.outstandingBalance.toLocaleString()}</p></div>
+                    <div><span className="text-muted-foreground">{t.clients.creditLimit}</span><p className="font-semibold text-foreground">{t.currency} {client.creditLimit.toLocaleString()}</p></div>
+                    <div><span className="text-muted-foreground">{t.finance.remaining}</span><p className={`font-semibold ${remaining < 0 ? 'text-status-danger' : 'text-status-safe'}`}>{t.currency} {remaining.toLocaleString()}</p></div>
+                    <div><span className="text-muted-foreground">{t.clients.terms}</span><p className="font-semibold text-foreground">{client.paymentTerms} {t.days}</p></div>
                   </div>
-                  {/* Usage bar */}
                   <div className="w-full bg-secondary rounded-full h-2">
                     <div className={`h-2 rounded-full transition-all ${usagePercent >= 100 ? 'bg-status-danger' : usagePercent >= 80 ? 'bg-status-warning' : 'bg-status-safe'}`} style={{ width: `${Math.min(100, usagePercent)}%` }} />
                   </div>
                   <Button variant="outline" size="sm" className="w-full text-xs" onClick={() => setPaymentDialog(client.id)}>
-                    <DollarSign className="w-3 h-3 mr-1" /> Record Payment
+                    <DollarSign className="w-3 h-3 me-1" /> {t.finance.recordPayment}
                   </Button>
                 </CardContent>
               </Card>
@@ -102,19 +87,18 @@ const Finance = () => {
         })}
       </div>
 
-      {/* Payment History */}
       <Card className="border-0 shadow-sm">
-        <CardHeader className="pb-2"><CardTitle className="text-base">Payment History</CardTitle></CardHeader>
+        <CardHeader className="pb-2"><CardTitle className="text-base">{t.finance.paymentHistory}</CardTitle></CardHeader>
         <CardContent className="p-0">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Date</TableHead>
-                <TableHead>Client</TableHead>
-                <TableHead className="text-right">Amount</TableHead>
-                <TableHead>Method</TableHead>
-                <TableHead>Reference</TableHead>
-                <TableHead>Notes</TableHead>
+                <TableHead>{t.date}</TableHead>
+                <TableHead>{t.orders.client}</TableHead>
+                <TableHead className="text-end">{t.finance.amount}</TableHead>
+                <TableHead>{t.finance.method}</TableHead>
+                <TableHead>{t.finance.reference}</TableHead>
+                <TableHead>{t.notes}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -122,8 +106,10 @@ const Finance = () => {
                 <TableRow key={payment.id}>
                   <TableCell className="text-sm">{payment.date}</TableCell>
                   <TableCell className="font-medium">{payment.clientName}</TableCell>
-                  <TableCell className="text-right font-medium text-status-safe">SAR {payment.amount.toLocaleString()}</TableCell>
-                  <TableCell className="capitalize text-sm">{payment.method}</TableCell>
+                  <TableCell className="text-end font-medium text-status-safe">{t.currency} {payment.amount.toLocaleString()}</TableCell>
+                  <TableCell className="text-sm">
+                    {payment.method === 'cash' ? t.finance.cash : payment.method === 'transfer' ? t.finance.bankTransfer : t.finance.cheque}
+                  </TableCell>
                   <TableCell className="text-sm text-muted-foreground">{payment.referenceNumber}</TableCell>
                   <TableCell className="text-sm text-muted-foreground">{payment.notes || '—'}</TableCell>
                 </TableRow>
@@ -133,28 +119,27 @@ const Finance = () => {
         </CardContent>
       </Card>
 
-      {/* Record Payment Dialog */}
       <Dialog open={!!paymentDialog} onOpenChange={() => setPaymentDialog(null)}>
         <DialogContent>
-          <DialogHeader><DialogTitle>Record Payment — {clientList.find(c => c.id === paymentDialog)?.companyName}</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{t.finance.recordPaymentFor} — {clientList.find(c => c.id === paymentDialog)?.companyName}</DialogTitle></DialogHeader>
           <div className="space-y-4">
-            <div><Label>Amount (SAR)</Label><Input type="number" value={paymentForm.amount} onChange={e => setPaymentForm({ ...paymentForm, amount: +e.target.value })} /></div>
+            <div><Label>{t.finance.amount} ({t.currency})</Label><Input type="number" value={paymentForm.amount} onChange={e => setPaymentForm({ ...paymentForm, amount: +e.target.value })} /></div>
             <div>
-              <Label>Payment Method</Label>
+              <Label>{t.finance.paymentMethod}</Label>
               <Select value={paymentForm.method} onValueChange={v => setPaymentForm({ ...paymentForm, method: v as PaymentMethod })}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="cash">Cash</SelectItem>
-                  <SelectItem value="transfer">Bank Transfer</SelectItem>
-                  <SelectItem value="cheque">Cheque</SelectItem>
+                  <SelectItem value="cash">{t.finance.cash}</SelectItem>
+                  <SelectItem value="transfer">{t.finance.bankTransfer}</SelectItem>
+                  <SelectItem value="cheque">{t.finance.cheque}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
-            <div><Label>Reference Number</Label><Input value={paymentForm.referenceNumber} onChange={e => setPaymentForm({ ...paymentForm, referenceNumber: e.target.value })} /></div>
-            <div><Label>Date</Label><Input type="date" value={paymentForm.date} onChange={e => setPaymentForm({ ...paymentForm, date: e.target.value })} /></div>
-            <div><Label>Notes</Label><Textarea value={paymentForm.notes} onChange={e => setPaymentForm({ ...paymentForm, notes: e.target.value })} /></div>
+            <div><Label>{t.finance.referenceNumber}</Label><Input value={paymentForm.referenceNumber} onChange={e => setPaymentForm({ ...paymentForm, referenceNumber: e.target.value })} /></div>
+            <div><Label>{t.date}</Label><Input type="date" value={paymentForm.date} onChange={e => setPaymentForm({ ...paymentForm, date: e.target.value })} /></div>
+            <div><Label>{t.notes}</Label><Textarea value={paymentForm.notes} onChange={e => setPaymentForm({ ...paymentForm, notes: e.target.value })} /></div>
           </div>
-          <div className="flex justify-end mt-4"><Button onClick={handleRecordPayment} disabled={paymentForm.amount <= 0}>Record Payment</Button></div>
+          <div className="flex justify-end mt-4"><Button onClick={handleRecordPayment} disabled={paymentForm.amount <= 0}>{t.finance.recordPayment}</Button></div>
         </DialogContent>
       </Dialog>
     </div>
