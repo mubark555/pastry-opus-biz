@@ -15,6 +15,23 @@ const en = {
   days: 'days',
   items: 'item(s)',
   settings: 'Settings',
+
+  // Auth
+  auth: {
+    login: 'Login',
+    signup: 'Sign Up',
+    email: 'Email',
+    password: 'Password',
+    fullName: 'Full Name',
+    loginFailed: 'Login Failed',
+    signupFailed: 'Sign Up Failed',
+    signupSuccess: 'Account Created',
+    checkEmail: 'Please check your email to verify your account.',
+    or: 'or',
+    demoMode: 'Login as Demo',
+    demoBanner: 'DEMO MODE — This data is for demonstration only',
+    logout: 'Logout',
+  },
   
   // App
   appName: 'SweetOps',

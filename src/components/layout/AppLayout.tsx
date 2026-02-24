@@ -1,15 +1,30 @@
 import { NavLink, Outlet } from 'react-router-dom';
 import { 
   LayoutDashboard, Package, Building2, ShoppingCart, 
-  ChefHat, Truck, CreditCard, Warehouse, Settings, Cookie, Tag, Globe
+  ChefHat, Truck, CreditCard, Warehouse, Settings, Cookie, Tag, Globe, LogOut
 } from 'lucide-react';
 import { useLanguage } from '@/i18n/LanguageContext';
-import { Button } from '@/components/ui/button';
+import { useAuth, type AppRole } from '@/hooks/useAuth';
+import DemoBanner from './DemoBanner';
+
+// Define which roles can access which routes
+const roleAccess: Record<string, AppRole[]> = {
+  '/': ['super_admin', 'sales_admin', 'kitchen', 'delivery', 'finance', 'demo_admin'],
+  '/products': ['super_admin', 'sales_admin', 'demo_admin'],
+  '/clients': ['super_admin', 'sales_admin', 'finance', 'demo_admin'],
+  '/client-pricing': ['super_admin', 'sales_admin', 'demo_admin'],
+  '/orders': ['super_admin', 'sales_admin', 'finance', 'demo_admin'],
+  '/kitchen': ['super_admin', 'kitchen', 'demo_admin'],
+  '/delivery': ['super_admin', 'delivery', 'demo_admin'],
+  '/finance': ['super_admin', 'finance', 'demo_admin'],
+  '/inventory': ['super_admin', 'sales_admin', 'kitchen', 'demo_admin'],
+};
 
 const AppLayout = () => {
   const { t, lang, setLanguage, isRTL } = useLanguage();
+  const { role, signOut, isDemo } = useAuth();
 
-  const navItems = [
+  const allNavItems = [
     { to: '/', icon: LayoutDashboard, label: t.nav.dashboard },
     { to: '/products', icon: Package, label: t.nav.products },
     { to: '/clients', icon: Building2, label: t.nav.clients },
@@ -21,60 +36,74 @@ const AppLayout = () => {
     { to: '/inventory', icon: Warehouse, label: t.nav.inventory },
   ];
 
+  const navItems = allNavItems.filter(item => {
+    const allowed = roleAccess[item.to];
+    return !allowed || !role || allowed.includes(role);
+  });
+
   return (
-    <div className="flex h-screen overflow-hidden">
-      {/* Sidebar */}
-      <aside className={`w-64 flex-shrink-0 bg-sidebar flex flex-col ${isRTL ? 'border-l' : 'border-r'} border-sidebar-border`}>
-        <div className="p-5 flex items-center gap-3 border-b border-sidebar-border">
-          <div className="w-9 h-9 rounded-lg bg-sidebar-primary flex items-center justify-center">
-            <Cookie className="w-5 h-5 text-sidebar-primary-foreground" />
+    <div className="flex flex-col h-screen overflow-hidden">
+      <DemoBanner />
+      <div className="flex flex-1 overflow-hidden">
+        {/* Sidebar */}
+        <aside className={`w-64 flex-shrink-0 bg-sidebar flex flex-col ${isRTL ? 'border-l' : 'border-r'} border-sidebar-border`}>
+          <div className="p-5 flex items-center gap-3 border-b border-sidebar-border">
+            <div className="w-9 h-9 rounded-lg bg-sidebar-primary flex items-center justify-center">
+              <Cookie className="w-5 h-5 text-sidebar-primary-foreground" />
+            </div>
+            <div>
+              <h1 className="text-sm font-bold text-sidebar-accent-foreground tracking-tight">{t.appName}</h1>
+              <p className="text-[10px] text-sidebar-foreground">{t.appSubtitle}</p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-sm font-bold text-sidebar-accent-foreground tracking-tight">{t.appName}</h1>
-            <p className="text-[10px] text-sidebar-foreground">{t.appSubtitle}</p>
-          </div>
-        </div>
 
-        <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
-          {navItems.map((item) => (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              end={item.to === '/'}
-              className={({ isActive }) =>
-                `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                  isActive
-                    ? 'bg-sidebar-primary text-sidebar-primary-foreground'
-                    : 'text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'
-                }`
-              }
+          <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
+            {navItems.map((item) => (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                end={item.to === '/'}
+                className={({ isActive }) =>
+                  `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                    isActive
+                      ? 'bg-sidebar-primary text-sidebar-primary-foreground'
+                      : 'text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'
+                  }`
+                }
+              >
+                <item.icon className="w-4 h-4" />
+                {item.label}
+              </NavLink>
+            ))}
+          </nav>
+
+          <div className="p-3 border-t border-sidebar-border space-y-1">
+            <button 
+              onClick={() => setLanguage(lang === 'ar' ? 'en' : 'ar')}
+              className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground w-full transition-colors"
             >
-              <item.icon className="w-4 h-4" />
-              {item.label}
-            </NavLink>
-          ))}
-        </nav>
+              <Globe className="w-4 h-4" />
+              {lang === 'ar' ? 'English' : 'العربية'}
+            </button>
+            <button className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground w-full transition-colors">
+              <Settings className="w-4 h-4" />
+              {t.settings}
+            </button>
+            <button 
+              onClick={signOut}
+              className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-destructive hover:bg-sidebar-accent w-full transition-colors"
+            >
+              <LogOut className="w-4 h-4" />
+              {t.auth.logout}
+            </button>
+          </div>
+        </aside>
 
-        <div className="p-3 border-t border-sidebar-border space-y-1">
-          {/* Language Switcher */}
-          <button 
-            onClick={() => setLanguage(lang === 'ar' ? 'en' : 'ar')}
-            className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground w-full transition-colors"
-          >
-            <Globe className="w-4 h-4" />
-            {lang === 'ar' ? 'English' : 'العربية'}
-          </button>
-          <button className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground w-full transition-colors">
-            <Settings className="w-4 h-4" />
-            {t.settings}
-          </button>
-        </div>
-      </aside>
-
-      {/* Main Content */}
-      <main className="flex-1 overflow-y-auto">
-        <Outlet />
-      </main>
+        {/* Main Content */}
+        <main className="flex-1 overflow-y-auto">
+          <Outlet />
+        </main>
+      </div>
     </div>
   );
 };
