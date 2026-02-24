@@ -18,6 +18,23 @@ const ar: Translations = {
   items: 'عنصر',
   settings: 'الإعدادات',
 
+  // Auth
+  auth: {
+    login: 'تسجيل الدخول',
+    signup: 'إنشاء حساب',
+    email: 'البريد الإلكتروني',
+    password: 'كلمة المرور',
+    fullName: 'الاسم الكامل',
+    loginFailed: 'فشل تسجيل الدخول',
+    signupFailed: 'فشل إنشاء الحساب',
+    signupSuccess: 'تم إنشاء الحساب',
+    checkEmail: 'يرجى التحقق من بريدك الإلكتروني لتأكيد الحساب.',
+    or: 'أو',
+    demoMode: 'دخول تجريبي',
+    demoBanner: 'وضع تجريبي — هذه البيانات للعرض فقط',
+    logout: 'تسجيل الخروج',
+  },
+
   // App
   appName: 'سويت أوبس',
   appSubtitle: 'التوزيع والعمليات',
