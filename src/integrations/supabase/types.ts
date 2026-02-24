@@ -105,6 +105,7 @@ export type Database = {
           credit_limit: number
           email: string | null
           id: string
+          is_demo: boolean
           is_prepaid: boolean
           notes: string | null
           outstanding_balance: number
@@ -121,6 +122,7 @@ export type Database = {
           credit_limit?: number
           email?: string | null
           id?: string
+          is_demo?: boolean
           is_prepaid?: boolean
           notes?: string | null
           outstanding_balance?: number
@@ -137,6 +139,7 @@ export type Database = {
           credit_limit?: number
           email?: string | null
           id?: string
+          is_demo?: boolean
           is_prepaid?: boolean
           notes?: string | null
           outstanding_balance?: number
@@ -234,6 +237,7 @@ export type Database = {
           due_date: string | null
           id: string
           invoice_number: string
+          is_demo: boolean
           issue_date: string
           items: Json
           notes: string | null
@@ -254,6 +258,7 @@ export type Database = {
           due_date?: string | null
           id?: string
           invoice_number: string
+          is_demo?: boolean
           issue_date?: string
           items?: Json
           notes?: string | null
@@ -274,6 +279,7 @@ export type Database = {
           due_date?: string | null
           id?: string
           invoice_number?: string
+          is_demo?: boolean
           issue_date?: string
           items?: Json
           notes?: string | null
@@ -361,6 +367,7 @@ export type Database = {
           delivery_type: Database["public"]["Enums"]["delivery_type"]
           driver_id: string | null
           id: string
+          is_demo: boolean
           notes: string | null
           order_number: string
           rejected_at: string | null
@@ -382,6 +389,7 @@ export type Database = {
           delivery_type?: Database["public"]["Enums"]["delivery_type"]
           driver_id?: string | null
           id?: string
+          is_demo?: boolean
           notes?: string | null
           order_number: string
           rejected_at?: string | null
@@ -403,6 +411,7 @@ export type Database = {
           delivery_type?: Database["public"]["Enums"]["delivery_type"]
           driver_id?: string | null
           id?: string
+          is_demo?: boolean
           notes?: string | null
           order_number?: string
           rejected_at?: string | null
@@ -515,6 +524,7 @@ export type Database = {
           created_by: string | null
           date: string
           id: string
+          is_demo: boolean
           method: Database["public"]["Enums"]["payment_method"]
           notes: string | null
           order_id: string | null
@@ -529,6 +539,7 @@ export type Database = {
           created_by?: string | null
           date?: string
           id?: string
+          is_demo?: boolean
           method?: Database["public"]["Enums"]["payment_method"]
           notes?: string | null
           order_id?: string | null
@@ -543,6 +554,7 @@ export type Database = {
           created_by?: string | null
           date?: string
           id?: string
+          is_demo?: boolean
           method?: Database["public"]["Enums"]["payment_method"]
           notes?: string | null
           order_id?: string | null
@@ -619,6 +631,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          client_id: string | null
           created_at: string
           full_name: string
           id: string
@@ -628,6 +641,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          client_id?: string | null
           created_at?: string
           full_name?: string
           id?: string
@@ -637,6 +651,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          client_id?: string | null
           created_at?: string
           full_name?: string
           id?: string
@@ -645,7 +660,15 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
@@ -702,6 +725,8 @@ export type Database = {
         | "kitchen"
         | "delivery"
         | "finance"
+        | "client"
+        | "demo_admin"
       delivery_type: "pickup" | "delivery"
       invoice_status: "draft" | "issued" | "paid" | "cancelled"
       order_status:
@@ -855,6 +880,8 @@ export const Constants = {
         "kitchen",
         "delivery",
         "finance",
+        "client",
+        "demo_admin",
       ],
       delivery_type: ["pickup", "delivery"],
       invoice_status: ["draft", "issued", "paid", "cancelled"],
